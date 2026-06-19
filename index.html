@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>SuriSuri</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    /* ─────────────────────────────────────────
+       Design Tokens
+    ───────────────────────────────────────── */
+    :root {
+      --bg:            #000000;
+      --glass-bg:      rgba(22, 22, 22, 0.72);
+      --glass-border:  rgba(210, 210, 210, 0.10);
+      --glass-shine:   rgba(255, 255, 255, 0.055);
+      --silver:        #9e9e9e;
+      --silver-lt:     #c8c8c8;
+      --silver-dim:    #5a5a5a;
+      --cream:         #f2efe8;
+      --muted:         #3a3a3a;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--cream);
+      min-height: 100dvh;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+
+    /* ─────────────────────────────────────────
+       Background — layered ambient light
+    ───────────────────────────────────────── */
+    .bg-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background:
+        /* upper-left cool glow */
+        radial-gradient(ellipse 65% 45% at 20% -8%,
+          rgba(80, 80, 80, 0.20) 0%,
+          transparent 70%),
+        /* lower-right warm depth */
+        radial-gradient(ellipse 55% 40% at 85% 108%,
+          rgba(40, 40, 40, 0.35) 0%,
+          transparent 70%),
+        /* center vignette */
+        radial-gradient(ellipse 100% 100% at 50% 50%,
+          rgba(0,0,0,0) 30%,
+          rgba(0,0,0,0.60) 100%);
+    }
+
+    /* ─────────────────────────────────────────
+       Page Shell
+    ───────────────────────────────────────── */
+    .shell {
+      position: relative;
+      z-index: 1;
+      max-width: 430px;
+      min-height: 100dvh;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      padding: 0 24px 40px;
+    }
+
+    /* ─────────────────────────────────────────
+       Header
+    ───────────────────────────────────────── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 54px;
+      padding-bottom: 8px;
+    }
+
+    .logo {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: 0.30em;
+      text-transform: uppercase;
+      color: var(--silver-lt);
+      user-select: none;
+    }
+    .logo strong {
+      font-weight: 700;
+      color: var(--cream);
+    }
+
+    /* small glass pill — notification / status */
+    .header-status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      border-radius: 100px;
+      padding: 5px 12px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+    .status-dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--silver-lt);
+      opacity: 0.5;
+    }
+    .status-text {
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.12em;
+      color: var(--silver);
+    }
+
+    /* ─────────────────────────────────────────
+       Headline Section
+    ───────────────────────────────────────── */
+    .headline-section {
+      padding: 36px 0 10px;
+    }
+
+    .eyebrow {
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: 0.22em;
+      color: var(--silver-dim);
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .headline {
+      font-size: 32px;
+      font-weight: 700;
+      line-height: 1.22;
+      letter-spacing: -0.025em;
+      color: var(--cream);
+    }
+
+    .headline-sub {
+      margin-top: 12px;
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.65;
+      color: var(--silver);
+      letter-spacing: 0.01em;
+    }
+
+    /* ─────────────────────────────────────────
+       Section Divider
+    ───────────────────────────────────────── */
+    .divider {
+      height: 1px;
+      margin: 32px 0 30px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(200,200,200,0.12) 20%,
+        rgba(200,200,200,0.12) 80%,
+        transparent 100%
+      );
+    }
+
+    /* ─────────────────────────────────────────
+       Action Buttons  — glass + metal
+    ───────────────────────────────────────── */
+    .actions {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .action-btn {
+      position: relative;
+      min-height: 112px;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      gap: 22px;
+      padding: 28px 26px;
+      border-radius: 24px;
+      cursor: pointer;
+      text-align: left;
+      overflow: hidden;
+
+      /* glass base */
+      background:
+        linear-gradient(
+          150deg,
+          rgba(30, 30, 30, 0.85) 0%,
+          rgba(12, 12, 12, 0.92) 100%
+        );
+
+      /* edge definition */
+      border: 1px solid var(--glass-border);
+
+      /* depth + glass reflection */
+      box-shadow:
+        /* inner top highlight — light catching rim */
+        inset 0 1px 0   rgba(255,255,255,0.075),
+        /* inner bottom shadow — depth */
+        inset 0 -2px 6px rgba(0,0,0,0.55),
+        /* inner side ambient */
+        inset 1px 0 4px  rgba(255,255,255,0.02),
+        /* outer lift shadow */
+        0 10px 40px rgba(0,0,0,0.70),
+        0 2px  8px  rgba(0,0,0,0.50),
+        /* very subtle outer silver edge glow */
+        0 0 0 0.5px rgba(180,180,180,0.06);
+
+      /* glass blur */
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+
+      transition: all 0.35s ease-in-out;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* top metallic sheen line */
+    .action-btn::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 12%; right: 12%;
+      height: 1px;
+      background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255,255,255,0.10) 40%,
+        rgba(255,255,255,0.10) 60%,
+        transparent 100%
+      );
+    }
+
+    /* left-side ambient light */
+    .action-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 24px;
+      background: radial-gradient(
+        ellipse 50% 65% at 12% 50%,
+        rgba(255,255,255,0.032) 0%,
+        transparent 65%
+      );
+      pointer-events: none;
+    }
+
+    /* ── hover: background deepens, rim brightens ── */
+    .action-btn:hover {
+      background:
+        linear-gradient(
+          150deg,
+          rgba(18, 18, 18, 0.90) 0%,
+          rgba(6, 6, 6, 0.96) 100%
+        );
+      border-color: rgba(210, 210, 210, 0.18);
+      box-shadow:
+        inset 0 2px 8px  rgba(0,0,0,0.80),
+        inset 0 -1px 4px rgba(0,0,0,0.60),
+        0 6px 24px rgba(0,0,0,0.80),
+        0 1px 6px  rgba(0,0,0,0.60);
+      transform: translateY(1px);
+    }
+
+    /* ── active / touch: pressed into the surface ── */
+    .action-btn:active {
+      background:
+        linear-gradient(
+          150deg,
+          rgba(10, 10, 10, 0.95) 0%,
+          rgba(4, 4, 4, 0.98) 100%
+        );
+      border-color: rgba(180, 180, 180, 0.12);
+      box-shadow:
+        inset 0 5px 16px rgba(0,0,0,1),
+        inset 0 -1px 4px rgba(0,0,0,0.80),
+        0 3px 12px rgba(0,0,0,0.90);
+      transform: translateY(2px);
+    }
+
+    /* ── icon container — inset panel ── */
+    .btn-icon-box {
+      position: relative;
+      z-index: 1;
+      width: 62px; height: 62px;
+      flex-shrink: 0;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--silver-lt);
+
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(200,200,200,0.09);
+      box-shadow:
+        inset 0 2px 6px rgba(0,0,0,0.65),
+        inset 0 1px 0   rgba(255,255,255,0.055),
+        0 1px 3px rgba(255,255,255,0.015);
+    }
+
+    /* ── text ── */
+    .btn-texts {
+      position: relative;
+      z-index: 1;
+      flex: 1;
+    }
+
+    .btn-title {
+      font-size: 19px;
+      font-weight: 600;
+      color: var(--cream);
+      letter-spacing: -0.015em;
+      margin-bottom: 6px;
+    }
+
+    .btn-desc {
+      font-size: 12px;
+      font-weight: 300;
+      color: var(--silver);
+      letter-spacing: 0.03em;
+      line-height: 1.5;
+      opacity: 0.65;
+    }
+
+    /* ── chevron ── */
+    .btn-chevron {
+      position: relative;
+      z-index: 1;
+      flex-shrink: 0;
+      color: var(--silver-dim);
+      transition: all 0.35s ease-in-out;
+    }
+    .action-btn:hover .btn-chevron {
+      color: var(--silver-lt);
+      transform: translateX(4px);
+    }
+
+    /* ─────────────────────────────────────────
+       Bottom hint
+    ───────────────────────────────────────── */
+    .bottom-hint {
+      margin-top: 36px;
+      text-align: center;
+    }
+    .bottom-hint-text {
+      font-size: 11px;
+      font-weight: 300;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+    .bottom-hint-line {
+      display: inline-block;
+      width: 28px;
+      height: 1px;
+      background: var(--muted);
+      opacity: 0.4;
+      vertical-align: middle;
+      margin: 0 10px;
+    }
+
+    /* ─────────────────────────────────────────
+       Assignment Notification Bar (modal trigger)
+    ───────────────────────────────────────── */
+    .notify-bar {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-top: 24px;
+      padding: 15px 18px;
+      border-radius: 16px;
+      cursor: pointer;
+      background: rgba(37, 99, 235, 0.07);
+      border: 1px solid rgba(37, 99, 235, 0.28);
+      box-shadow: inset 0 1px 0 rgba(147,197,253,0.08);
+      transition: all 0.3s ease-in-out;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .notify-bar:hover  { background: rgba(37,99,235,0.13); border-color: rgba(37,99,235,0.40); }
+    .notify-bar:active { transform: scale(0.99); }
+
+    @keyframes pulse-blue {
+      0%, 100% { box-shadow: 0 0 0 0   rgba(59,130,246,0.55); }
+      50%       { box-shadow: 0 0 0 7px rgba(59,130,246,0); }
+    }
+    .notify-pulse {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+      background: #3b82f6;
+      flex-shrink: 0;
+      animation: pulse-blue 2s ease-in-out infinite;
+    }
+    .notify-texts { flex: 1; }
+    .notify-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #93c5fd;
+      margin-bottom: 2px;
+    }
+    .notify-sub {
+      font-size: 11px;
+      font-weight: 300;
+      color: rgba(147,197,253,0.55);
+    }
+    .notify-chevron { color: rgba(147,197,253,0.50); flex-shrink: 0; }
+
+    /* ─────────────────────────────────────────
+       Modal Overlay
+    ───────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.35s ease-in-out;
+    }
+    .modal-overlay.visible { opacity: 1; }
+
+    /* ─── Bottom Sheet ─── */
+    .modal-sheet {
+      width: 100%;
+      max-width: 430px;
+      max-height: 90dvh;
+      overflow-y: auto;
+      background: #0b0b0b;
+      border-radius: 28px 28px 0 0;
+      border-top: 1px solid rgba(200,200,200,0.09);
+      box-shadow: 0 -14px 60px rgba(0,0,0,0.90);
+      transform: translateY(100%);
+      transition: transform 0.42s cubic-bezier(0.32, 0.72, 0, 1);
+    }
+    .modal-overlay.visible .modal-sheet { transform: translateY(0); }
+
+    .modal-handle {
+      width: 40px; height: 4px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.10);
+      margin: 14px auto 0;
+    }
+
+    /* ─── Modal Header ─── */
+    .modal-body { padding: 20px 22px 0; }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+    }
+    .modal-title-text {
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--cream);
+      letter-spacing: -0.02em;
+    }
+    .modal-close {
+      width: 34px; height: 34px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      color: var(--silver);
+      transition: all 0.3s ease-in-out;
+    }
+    .modal-close:hover { background: rgba(255,255,255,0.10); }
+
+    /* ─── Trust Badge ─── */
+    .trust-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 16px;
+      border-radius: 14px;
+      margin-bottom: 18px;
+      background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 55%, #2563eb 100%);
+      border: 1px solid rgba(147,197,253,0.28);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        inset 0 -1px 0 rgba(0,0,0,0.20),
+        0 6px 24px rgba(37,99,235,0.35);
+    }
+    .trust-badge-icon {
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.14);
+      border: 1.5px solid rgba(255,255,255,0.28);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.20);
+    }
+    .trust-badge-sup {
+      font-size: 10px;
+      font-weight: 400;
+      color: rgba(186,230,253,0.75);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      margin-bottom: 3px;
+    }
+    .trust-badge-main {
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+
+    /* ─── Profile Card ─── */
+    .profile-card {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 16px;
+      border-radius: 16px;
+      margin-bottom: 22px;
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--glass-border);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.05),
+        0 4px 18px rgba(0,0,0,0.50);
+    }
+    .profile-avatar {
+      width: 68px; height: 68px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.055);
+      border: 1.5px solid rgba(200,200,200,0.14);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      color: var(--silver-dim);
+      box-shadow:
+        inset 0 2px 6px rgba(0,0,0,0.55),
+        inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+    .profile-name {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--cream);
+      letter-spacing: -0.015em;
+      margin-bottom: 6px;
+    }
+    .profile-plate-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .plate-chip {
+      font-size: 9px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 5px;
+      background: rgba(200,200,200,0.08);
+      border: 1px solid rgba(200,200,200,0.12);
+      color: var(--silver-dim);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .plate-number {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--silver);
+      letter-spacing: 0.04em;
+    }
+
+    /* ─── 4-Step Status Bar ─── */
+    .status-bar-section { margin-bottom: 6px; }
+    .status-bar-label {
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--silver-dim);
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    .steps-row {
+      display: flex;
+      align-items: flex-start;
+    }
+    .step-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+    /* connector line: right edge of dot → left edge of next dot */
+    .step-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      top: 10px;
+      left: calc(50% + 11px);
+      width: calc(100% - 22px);
+      height: 2px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 1px;
+    }
+    .step-item.s-done:not(:last-child)::after {
+      background: rgba(37,99,235,0.55);
+    }
+
+    .step-dot {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 1.5px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      position: relative;
+      z-index: 1;
+      margin-bottom: 8px;
+    }
+    .step-item.s-done .step-dot {
+      background: #1d4ed8;
+      border-color: #2563eb;
+      box-shadow: 0 0 10px rgba(37,99,235,0.45);
+    }
+    @keyframes step-glow {
+      0%, 100% { box-shadow: 0 0 0 0   rgba(34,197,94,0.55), 0 0 12px rgba(34,197,94,0.40); }
+      50%       { box-shadow: 0 0 0 6px rgba(34,197,94,0),    0 0 12px rgba(34,197,94,0.40); }
+    }
+    .step-item.s-active .step-dot {
+      background: rgba(34,197,94,0.12);
+      border-color: #22c55e;
+      animation: step-glow 2s ease-in-out infinite;
+    }
+    .s-active-inner {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+    }
+    .step-label {
+      font-size: 10px;
+      font-weight: 400;
+      color: var(--silver-dim);
+      text-align: center;
+      line-height: 1.35;
+      letter-spacing: 0.01em;
+    }
+    .step-item.s-done   .step-label { color: var(--silver); }
+    .step-item.s-active .step-label { color: #4ade80; font-weight: 600; }
+
+    /* ─── Approval CTA ─── */
+    .approval-wrap { padding: 24px 22px 32px; }
+
+    .approval-btn {
+      width: 100%;
+      min-height: 82px;
+      border-radius: 22px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      background: linear-gradient(150deg, #16a34a 0%, #15803d 100%);
+      border: 1px solid rgba(74,222,128,0.22);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.18),
+        inset 0 -2px 6px rgba(0,0,0,0.22),
+        0 10px 36px rgba(22,163,74,0.38);
+      transition: all 0.35s ease-in-out;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .approval-btn:hover {
+      background: linear-gradient(150deg, #15803d 0%, #166534 100%);
+      box-shadow:
+        inset 0 3px 10px rgba(0,0,0,0.32),
+        0 5px 20px rgba(22,163,74,0.25);
+      transform: translateY(1px);
+    }
+    .approval-btn:active {
+      transform: translateY(2px);
+      box-shadow:
+        inset 0 5px 16px rgba(0,0,0,0.50),
+        0 2px 10px rgba(22,163,74,0.18);
+    }
+    .approval-main {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.01em;
+    }
+    .approval-sub {
+      font-size: 12px;
+      font-weight: 400;
+      color: rgba(255,255,255,0.65);
+      letter-spacing: 0.02em;
+    }
+
+    /* ─── Completion Message (fades in after approval) ─── */
+    .completion-msg {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding: 28px 16px 6px;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 0.50s ease-in-out;
+    }
+    .completion-msg.visible { opacity: 1; }
+    .completion-icon {
+      width: 64px; height: 64px;
+      border-radius: 50%;
+      background: rgba(34,197,94,0.10);
+      border: 1.5px solid rgba(34,197,94,0.28);
+      display: flex; align-items: center; justify-content: center;
+      color: #4ade80;
+      box-shadow: 0 0 24px rgba(34,197,94,0.20);
+    }
+    .completion-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--cream);
+      line-height: 1.45;
+      letter-spacing: -0.02em;
+    }
+
+    /* ─────────────────────────────────────────
+       Error feedback — shake (failCount = 1)
+    ───────────────────────────────────────── */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%       { transform: translateX(-9px); }
+      40%       { transform: translateX(9px); }
+      60%       { transform: translateX(-5px); }
+      80%       { transform: translateX(5px); }
+    }
+    .shake { animation: shake 0.42s ease-in-out; }
+
+    /* ─────────────────────────────────────────
+       Emergency Screen (failCount = 2)
+    ───────────────────────────────────────── */
+    .emergency-screen {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background: #dd6b20;
+      display: none;            /* JS로 flex 전환 */
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+      opacity: 0;
+      transition: opacity 0.45s ease-in-out;
+    }
+    .emergency-screen.visible { opacity: 1; }
+
+    .call-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 22px;
+      width: 100%;
+      max-width: 360px;
+      min-height: 220px;
+      padding: 40px 28px;
+      border-radius: 28px;
+      text-decoration: none;
+      text-align: center;
+      color: #ffffff;
+
+      background: rgba(0, 0, 0, 0.18);
+      border: 2px solid rgba(255, 255, 255, 0.32);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.28),
+        inset 0 -2px 8px rgba(0,0,0,0.20),
+        0 16px 48px rgba(0,0,0,0.28);
+
+      transition: all 0.3s ease-in-out;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .call-btn:hover  { background: rgba(0,0,0,0.25); transform: translateY(1px); }
+    .call-btn:active { background: rgba(0,0,0,0.32); transform: translateY(3px); }
+
+    .call-icon-wrap {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      border: 2px solid rgba(255,255,255,0.30);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .call-btn-title {
+      font-size: 26px;
+      font-weight: 700;
+      line-height: 1.35;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+
+    .call-btn-number {
+      font-size: 20px;
+      font-weight: 500;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.80);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient background layers -->
+  <div class="bg-layer" aria-hidden="true"></div>
+
+  <div id="main-content" class="shell">
+
+    <!-- ── Header ── -->
+    <header class="header">
+      <div class="logo">Suri<strong>Suri</strong></div>
+
+      <div class="header-status" aria-label="서비스 상태">
+        <span class="status-dot"></span>
+        <span class="status-text">PREMIUM CARE</span>
+      </div>
+    </header>
+
+    <!-- ── Headline ── -->
+    <section class="headline-section">
+      <p class="eyebrow">Residence Management</p>
+      <h1 class="headline">무엇을<br>도와드릴까요?</h1>
+      <p class="headline-sub">
+        고장이나 불편한 점을 알려주시면<br>
+        신속하게 처리해 드리겠습니다.
+      </p>
+    </section>
+
+    <div class="divider" aria-hidden="true"></div>
+
+    <!-- ── Action Buttons ── -->
+    <section class="actions" aria-label="진단 방법 선택">
+
+      <!-- 사진으로 진단받기 -->
+      <button class="action-btn" onclick="handleCamera(this)" aria-label="사진으로 진단받기">
+        <div class="btn-icon-box" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2
+                     V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+            <circle cx="12" cy="13" r="4"/>
+          </svg>
+        </div>
+        <div class="btn-texts">
+          <div class="btn-title">사진으로 진단받기</div>
+          <div class="btn-desc">고장 부위를 촬영하면<br>바로 접수됩니다</div>
+        </div>
+        <svg class="btn-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+      <!-- 음성으로 진단받기 -->
+      <button class="action-btn" onclick="handleVoice(this)" aria-label="음성으로 진단받기">
+        <div class="btn-icon-box" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="1.5"
+               stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" y1="19" x2="12" y2="23"/>
+            <line x1="8"  y1="23" x2="16" y2="23"/>
+          </svg>
+        </div>
+        <div class="btn-texts">
+          <div class="btn-title">음성으로 진단받기</div>
+          <div class="btn-desc">말씀해 주시면<br>바로 접수해 드립니다</div>
+        </div>
+        <svg class="btn-chevron" width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+    </section>
+
+    <!-- ── Assignment Notification (모달 트리거) ── -->
+    <div class="notify-bar" onclick="openManagerModal()"
+         role="button" tabindex="0"
+         aria-label="기사 배정 알림 — 확인하기">
+      <span class="notify-pulse" aria-hidden="true"></span>
+      <div class="notify-texts">
+        <div class="notify-title">기사가 배정되었습니다</div>
+        <div class="notify-sub">김수리 마스터 · 탭하여 확인하기</div>
+      </div>
+      <svg class="notify-chevron" width="16" height="16" viewBox="0 0 24 24" fill="none"
+           stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <polyline points="9 18 15 12 9 6"/>
+      </svg>
+    </div>
+
+    <!-- ── Bottom Hint ── -->
+    <div class="bottom-hint">
+      <span class="bottom-hint-line"></span>
+      <span class="bottom-hint-text">24시간 접수 가능</span>
+      <span class="bottom-hint-line"></span>
+    </div>
+
+  </div><!-- /.shell -->
+
+  <!-- ══════════════════════════════════════════
+       Manager Modal
+  ══════════════════════════════════════════ -->
+  <div id="manager-modal" class="modal-overlay"
+       onclick="handleOverlayClick(event)">
+    <div class="modal-sheet"
+         role="dialog" aria-modal="true" aria-labelledby="modal-title-id">
+
+      <!-- drag handle -->
+      <div class="modal-handle" aria-hidden="true"></div>
+
+      <div class="modal-body">
+
+        <!-- header -->
+        <div class="modal-header">
+          <span id="modal-title-id" class="modal-title-text">안심 매니저 정보</span>
+          <button class="modal-close" onclick="closeManagerModal()" aria-label="닫기">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6"  y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- ─── Trust Badge ─── -->
+        <div class="trust-badge" aria-label="안심 인증 완료 배지">
+          <div class="trust-badge-icon" aria-hidden="true">
+            <!-- shield-check icon -->
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                 stroke="#ffffff" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              <polyline points="9 12 11 14 15 10"/>
+            </svg>
+          </div>
+          <div>
+            <div class="trust-badge-sup">VERIFIED PROFESSIONAL</div>
+            <div class="trust-badge-main">안심 인증 완료</div>
+          </div>
+        </div>
+
+        <!-- ─── Profile Card ─── -->
+        <div class="profile-card">
+          <!-- avatar placeholder -->
+          <div class="profile-avatar" aria-hidden="true">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.5"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+              <circle cx="12" cy="7" r="4"/>
+            </svg>
+          </div>
+          <div>
+            <div class="profile-name">김수리 마스터</div>
+            <div class="profile-plate-row">
+              <span class="plate-chip">차량</span>
+              <span class="plate-number">서울 12가 3456</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─── 4-Step Status Bar ─── -->
+        <div class="status-bar-section">
+          <div class="status-bar-label">작업 진행 상태</div>
+          <div class="steps-row" role="list" aria-label="작업 단계">
+
+            <!-- Step 1: 결제완료 (done) -->
+            <div class="step-item s-done" role="listitem" aria-label="결제완료 완료">
+              <div class="step-dot" aria-hidden="true">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                     stroke="#ffffff" stroke-width="3"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div class="step-label">결제<br>완료</div>
+            </div>
+
+            <!-- Step 2: 출발 (done) -->
+            <div class="step-item s-done" role="listitem" aria-label="출발 완료">
+              <div class="step-dot" aria-hidden="true">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                     stroke="#ffffff" stroke-width="3"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div class="step-label">출발</div>
+            </div>
+
+            <!-- Step 3: 작업중 (done) -->
+            <div class="step-item s-done" role="listitem" aria-label="작업중 완료">
+              <div class="step-dot" aria-hidden="true">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none"
+                     stroke="#ffffff" stroke-width="3"
+                     stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+              </div>
+              <div class="step-label">작업중</div>
+            </div>
+
+            <!-- Step 4: 승인대기 (active / current) -->
+            <div class="step-item s-active" role="listitem" aria-current="step" aria-label="승인대기 현재 단계">
+              <div class="step-dot" aria-hidden="true">
+                <div class="s-active-inner"></div>
+              </div>
+              <div class="step-label">승인<br>대기</div>
+            </div>
+
+          </div><!-- /.steps-row -->
+        </div><!-- /.status-bar-section -->
+
+      </div><!-- /.modal-body -->
+
+      <!-- ─── Approval CTA + Completion Message ─── -->
+      <div class="approval-wrap">
+
+        <button id="approval-btn" class="approval-btn"
+                onclick="handleApproval()"
+                aria-label="수리 완료 승인 및 정산하기">
+          <span class="approval-main">수리가 안전하게 완료되었습니다</span>
+          <span class="approval-sub">눌러서 정산하기</span>
+        </button>
+
+        <div id="completion-msg" class="completion-msg" role="status" aria-live="polite">
+          <div class="completion-icon" aria-hidden="true">
+            <!-- lock icon -->
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none"
+                 stroke="currentColor" stroke-width="1.8"
+                 stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+          </div>
+          <div class="completion-text">
+            문이 잘 잠겼는지<br>한 번 더 확인하세요!
+          </div>
+        </div>
+
+      </div><!-- /.approval-wrap -->
+
+    </div><!-- /.modal-sheet -->
+  </div><!-- /#manager-modal -->
+
+  <!-- ── Emergency Screen (failCount ≥ 2) ── -->
+  <div id="emergency-screen" class="emergency-screen" role="alert" aria-live="assertive" aria-atomic="true">
+    <a href="tel:02-1234-5678" class="call-btn" aria-label="상담원에게 전화하기 02-1234-5678">
+
+      <!-- phone icon -->
+      <div class="call-icon-wrap" aria-hidden="true">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none"
+             stroke="#ffffff" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2
+                   A19.79 19.79 0 0 1 3.08 4.18
+                   2 2 0 0 1 5.09 2h3a2 2 0 0 1 2 1.72
+                   c.127.96.361 1.903.7 2.81
+                   a2 2 0 0 1-.45 2.11L9.09 9.91
+                   a16 16 0 0 0 6 6l1.27-1.27
+                   a2 2 0 0 1 2.11-.45
+                   c.907.339 1.85.573 2.81.7
+                   A2 2 0 0 1 22 16.92z"/>
+        </svg>
+      </div>
+
+      <div class="call-btn-title">
+        인식이 잘 안 되시나요?<br>상담원에게 바로 전화하기
+      </div>
+
+      <div class="call-btn-number">02-1234-5678</div>
+
+    </a>
+  </div><!-- /#emergency-screen -->
+
+  <script>
+    /* ══════════════════════════════════════════
+       Manager Modal
+    ══════════════════════════════════════════ */
+
+    function openManagerModal() {
+      const overlay = document.getElementById('manager-modal');
+      overlay.style.display = 'flex';
+      // double rAF: ensures display:flex is painted before opacity transition
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          overlay.classList.add('visible');
+        });
+      });
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeManagerModal() {
+      const overlay = document.getElementById('manager-modal');
+      overlay.classList.remove('visible');
+      overlay.addEventListener('transitionend', () => {
+        overlay.style.display = 'none';
+        document.body.style.overflow = '';
+      }, { once: true });
+    }
+
+    // 오버레이 배경 클릭 시 닫기 (모달 내부 클릭은 제외)
+    function handleOverlayClick(e) {
+      if (e.target === document.getElementById('manager-modal')) {
+        closeManagerModal();
+      }
+    }
+
+    function handleApproval() {
+      const btn = document.getElementById('approval-btn');
+      const msg = document.getElementById('completion-msg');
+
+      // 버튼 페이드 아웃
+      btn.style.transition = 'opacity 0.30s ease-in-out';
+      btn.style.opacity = '0';
+      btn.addEventListener('transitionend', () => {
+        btn.style.display = 'none';
+        // 완료 메시지 페이드 인
+        msg.style.display = 'flex';
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            msg.classList.add('visible');
+          });
+        });
+      }, { once: true });
+    }
+
+    /* ── 에러 복구 상태 관리 ── */
+    let failCount = 0;
+
+    // 테스트용: 항상 에러를 발생시키는 함수
+    function simulateDiagnostic() {
+      throw new Error('진단 서비스 연결 실패 (테스트용)');
+    }
+
+    // 에러 발생 시 호출 — failCount 증가 및 분기 처리
+    function onDiagnosticError(triggerBtn) {
+      failCount += 1;
+      console.warn(`[SuriSuri] 진단 실패 (failCount: ${failCount})`);
+
+      if (failCount >= 2) {
+        showEmergencyScreen();
+        return;
+      }
+
+      // failCount === 1: 버튼 흔들림으로 에러 인지 전달
+      triggerBtn.classList.add('shake');
+      triggerBtn.addEventListener('animationend', () => {
+        triggerBtn.classList.remove('shake');
+      }, { once: true });
+    }
+
+    function handleCamera(btn) {
+      try {
+        simulateDiagnostic();
+      } catch (e) {
+        onDiagnosticError(btn);
+      }
+    }
+
+    function handleVoice(btn) {
+      try {
+        simulateDiagnostic();
+      } catch (e) {
+        onDiagnosticError(btn);
+      }
+    }
+
+    // failCount === 2: 기존 화면 숨기고 비상 화면 전환
+    function showEmergencyScreen() {
+      // 배경 레이어 제거
+      document.querySelector('.bg-layer').style.display = 'none';
+      // 메인 컨텐츠 숨김
+      document.getElementById('main-content').style.visibility = 'hidden';
+
+      const screen = document.getElementById('emergency-screen');
+      screen.style.display = 'flex';
+
+      // 다음 프레임에서 opacity 트랜지션 시작 (display 반영 이후)
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          screen.classList.add('visible');
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
