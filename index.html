@@ -786,7 +786,7 @@
     <div class="success-title">접수가 완료됐어요!</div>
     <div class="success-sub" id="success-problem-text"></div>
     <div class="success-eta">⏱ 담당 기사 매칭 중...</div>
-    <button onclick="goTo('main')" style="margin-top:8px;padding:14px 32px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--border);font-size:14px;font-weight:500;color:var(--silver);cursor:pointer;letter-spacing:.02em;transition:all .25s ease;">메인으로 돌아가기</button>
+    <button onclick="goHome()" style="margin-top:8px;padding:14px 32px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--border);font-size:14px;font-weight:500;color:var(--silver);cursor:pointer;letter-spacing:.02em;transition:all .25s ease;">메인으로 돌아가기</button>
   </div>
 </div>
 
@@ -960,11 +960,11 @@ function goTo(id) {
 
   from.classList.add('behind');
   from.classList.remove('active');
-  to.style.transform = 'translateX(100%)';
-  to.style.transition = 'none';
-  // force reflow
-  to.offsetHeight;
-  to.style.transition = '';
+
+  // Clear any lingering inline transform from a previous goBack(),
+  // then let the CSS class drive the transition (translateX(100%) → translateX(0)).
+  to.style.transform = '';
+  to.classList.remove('behind');
   to.classList.add('active');
   to.scrollTop = 0;
   stack.push(id);
@@ -973,18 +973,35 @@ function goTo(id) {
 function goBack() {
   if (stack.length <= 1) return;
   const fromId = stack.pop();
-  const toId   = stack[stack.length - 1];
-  const from   = document.getElementById('s-' + fromId);
-  const to     = document.getElementById('s-' + toId);
+
+  // Cancel voice auto-submit timer when leaving voice screen
+  if (fromId === 'voice') {
+    if (voiceTimer) { clearTimeout(voiceTimer); voiceTimer = null; }
+    document.getElementById('voice-status').textContent = '듣고 있어요...';
+    document.getElementById('voice-wave').style.opacity = '';
+  }
+
+  const toId = stack[stack.length - 1];
+  const from = document.getElementById('s-' + fromId);
+  const to   = document.getElementById('s-' + toId);
 
   from.classList.remove('active');
-  from.style.transform = 'translateX(100%)';
   from.addEventListener('transitionend', () => {
     from.style.transform = '';
   }, { once: true });
 
   to.classList.remove('behind');
   to.classList.add('active');
+}
+
+function goHome() {
+  if (voiceTimer) { clearTimeout(voiceTimer); voiceTimer = null; }
+  document.querySelectorAll('.screen').forEach(s => {
+    s.classList.remove('active', 'behind');
+    s.style.transform = '';
+  });
+  document.getElementById('s-main').classList.add('active');
+  stack = ['main'];
 }
 
 /* ════════════════════════════════
@@ -1007,22 +1024,24 @@ function capturePhoto() {
 let voiceTimer = null;
 document.getElementById('s-voice').addEventListener('transitionend', function(e) {
   if (this.classList.contains('active') && e.propertyName === 'transform') {
-    // auto-stop after 4s
+    if (voiceTimer) clearTimeout(voiceTimer);
     voiceTimer = setTimeout(stopVoice, 4000);
   }
 });
 
 function stopVoice() {
+  if (stack[stack.length - 1] !== 'voice') return;
   if (voiceTimer) { clearTimeout(voiceTimer); voiceTimer = null; }
   const wave = document.getElementById('voice-wave');
   wave.style.opacity = '0.3';
   document.getElementById('voice-status').textContent = '인식 완료!';
   setTimeout(() => {
+    if (stack[stack.length - 1] !== 'voice') return;
     wave.style.opacity = '';
+    document.getElementById('voice-status').textContent = '듣고 있어요...';
     currentState = { problem:'음성 접수', category:'음성 진단', desc:'음성으로 접수된 내용을 전문가가 확인할 예정이에요.' };
     goTo('request');
     setupRequest();
-    document.getElementById('voice-status').textContent = '듣고 있어요...';
   }, 700);
 }
 
@@ -1041,13 +1060,17 @@ function openSubCategory(catId) {
       <div style="font-size:11px;color:var(--silver);margin-top:3px;">${cat.count}</div>
     </div>
   `;
-  document.getElementById('sub-list').innerHTML = cat.items.map(item => `
-    <div class="sub-item" onclick="selectSubItem('${cat.label}','${item}','${cat.color}')">
+  const subList = document.getElementById('sub-list');
+  subList.innerHTML = cat.items.map(item => `
+    <div class="sub-item">
       <div class="sub-dot" style="background:${cat.color};"></div>
       <span class="sub-text">${item}</span>
       <svg class="sub-chev" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
     </div>
   `).join('');
+  subList.querySelectorAll('.sub-item').forEach((el, idx) => {
+    el.addEventListener('click', () => selectSubItem(cat.label, cat.items[idx], cat.color));
+  });
 
   currentState.catColor = cat.color;
   currentState.catLabel = cat.label;
@@ -1063,19 +1086,32 @@ function selectSubItem(catLabel, item, color) {
 /* ════════════════════════════════
    Request Screen
 ════════════════════════════════ */
+function hexToRgba(hex, alpha) {
+  const h = hex.replace('#','');
+  const r = parseInt(h.slice(0,2),16);
+  const g = parseInt(h.slice(2,4),16);
+  const b = parseInt(h.slice(4,6),16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
 function setupRequest() {
-  const color = currentState.color || '#2563eb';
-  document.getElementById('req-tag').innerHTML = `
+  const color = (currentState.color && currentState.color.startsWith('#'))
+                ? currentState.color : '#2563eb';
+  const tag = document.getElementById('req-tag');
+  tag.innerHTML = `
     <span style="width:7px;height:7px;border-radius:50%;background:${color};display:inline-block;"></span>
     <span style="color:${color};font-size:11px;font-weight:600;letter-spacing:.04em;">${currentState.category || '수리 접수'}</span>
   `;
-  document.getElementById('req-tag').style.background = color.replace(')', ',.12)').replace('rgb','rgba');
-  document.getElementById('req-tag').style.border = `1px solid ${color.replace(')', ',.25)').replace('rgb','rgba')}`;
+  tag.style.background = hexToRgba(color, 0.12);
+  tag.style.border = `1px solid ${hexToRgba(color, 0.28)}`;
   document.getElementById('req-problem').textContent = currentState.problem || '';
   document.getElementById('req-desc').textContent    = currentState.desc || '';
 
-  // reset state
-  document.getElementById('req-form-area').style.display = '';
+  // reset form state
+  const formArea = document.getElementById('req-form-area');
+  formArea.style.display = '';
+  formArea.style.opacity = '1';
+  formArea.style.transition = '';
   document.getElementById('success-wrap').classList.remove('visible');
   document.getElementById('success-wrap').style.display = 'none';
   document.getElementById('req-back-btn').style.display = '';
