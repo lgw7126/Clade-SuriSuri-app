@@ -938,6 +938,9 @@
     <div class="call-btn-title">인식이 잘 안 되시나요?<br>상담원에게 바로 전화하기</div>
     <div class="call-btn-number">02-1234-5678</div>
   </a>
+  <button onclick="hideEmergency()" style="margin-top:28px;padding:13px 32px;border-radius:100px;background:rgba(0,0,0,.2);border:1.5px solid rgba(255,255,255,.3);color:rgba(255,255,255,.75);font-size:14px;font-weight:500;cursor:pointer;letter-spacing:.02em;-webkit-tap-highlight-color:transparent;transition:all .22s ease;">
+    ← 돌아가기
+  </button>
 </div>
 
 
@@ -1334,6 +1337,11 @@ function showEmergency() {
   const s = document.getElementById('emergency-screen');
   s.style.display = 'flex';
   requestAnimationFrame(() => requestAnimationFrame(() => s.classList.add('visible')));
+}
+function hideEmergency() {
+  const s = document.getElementById('emergency-screen');
+  s.classList.remove('visible');
+  s.addEventListener('transitionend', () => { s.style.display = 'none'; }, { once: true });
 }
 </script>
 </body>
